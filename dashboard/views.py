@@ -1,15 +1,24 @@
 from django.shortcuts import render
-from . forms import *
-
-# Create your views here.
+from .forms import NotesForm
+from .models import Notes
+from django.contrib import messages
 
 def home(request):
     return render(request,'dashboard/home.html')
 
 def notes(request):
-    form=NotesForm()
-    notes=Notes.objects.filter(user=request.user)
-    context={'notes':notes,'form':form}
-    return render(request,'dashboard/notes.html',context)
-
-
+    if request.method == "POST":
+        form = NotesForm(request.POST)
+        if form.is_valid():
+            notes = Notes(
+                user=request.user,
+                title=request.POST['title'],
+                description=request.POST['description']
+            )
+            notes.save()
+        messages.success(request, f"Notes added from {request.user.username} successfully")     
+    else:       
+        form = NotesForm()
+        notes = Notes.objects.filter(user=request.user)
+        context = {'notes': notes, 'form': form}
+        return render(request, 'dashboard/notes.html', context)
